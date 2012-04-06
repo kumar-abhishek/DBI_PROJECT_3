@@ -20,7 +20,7 @@ struct arguments{
 	FILE *outFile;
 	Pipe *inPipeL;
 	Pipe *inPipeR;
-
+    OrderMaker *groupAtts;
 };
 
 class RelationalOp {
@@ -85,9 +85,9 @@ class Sum : public RelationalOp {
 };
 class GroupBy : public RelationalOp {
     public:
-        void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) { }
-        void WaitUntilDone () { }
-        void Use_n_Pages (int n) { }
+        void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
+        void WaitUntilDone ();
+        void Use_n_Pages (int n);
 };
 class WriteOut : public RelationalOp {
     public:

@@ -198,16 +198,16 @@ void q4 () {
 	Function func;
 	char *str_sum = "(ps_supplycost)";
 	get_cnf (str_sum, &join_sch, func);
-	//func.Print ();
-	//T.Use_n_Pages (1);
+	func.Print ();
+	T.Use_n_Pages (1);
 
 	SF_ps.Run (dbf_ps, _ps, cnf_ps, lit_ps); // 161 recs qualified
 	J.Run (_s, _ps, _s_ps, cnf_p_ps, lit_p_ps);
-	//T.Run (_s_ps, _out, func);
+	T.Run (_s_ps, _out, func);
 
 	SF_ps.WaitUntilDone ();
 	J.WaitUntilDone ();
-	//T.WaitUntilDone ();
+	T.WaitUntilDone ();
 
 	Schema sum_sch ("sum_sch", 1, &DA);
 	int cnt = clear_pipe (_out, &sum_sch, true);
@@ -265,40 +265,52 @@ void q6 () {
 	init_SF_ps (pred_ps, 100);
 
 	Join J;
-		// left _s
-		// right _ps
-		Pipe _s_ps (pipesz);
-		CNF cnf_p_ps;
-		Record lit_p_ps;
-		get_cnf ("(s_suppkey = ps_suppkey)", s->schema(), ps->schema(), cnf_p_ps, lit_p_ps);
+    // left _s
+    // right _ps
+    Pipe _s_ps (pipesz);
+    CNF cnf_p_ps;
+    Record lit_p_ps;
+    get_cnf ("(s_suppkey = ps_suppkey)", s->schema(), ps->schema(), cnf_p_ps, lit_p_ps);
 
-	int outAtts = sAtts + psAtts;
-	Attribute s_nationkey = {"s_nationkey", Int};
-	Attribute ps_supplycost = {"ps_supplycost", Double};
-	Attribute joinatt[] = {IA,SA,SA,s_nationkey,SA,DA,SA,IA,IA,IA,ps_supplycost,SA};
-	Schema join_sch ("join_sch", outAtts, joinatt);
+    int outAtts = sAtts + psAtts;
+    Attribute s_nationkey = {"s_nationkey", Int};
+    Attribute ps_supplycost = {"ps_supplycost", Double};
+    Attribute joinatt[] = {IA,SA,SA,s_nationkey,SA,DA,SA,IA,IA,IA,ps_supplycost,SA};
+    Schema join_sch ("join_sch", outAtts, joinatt);
 
-	GroupBy G;
-	// _s (input pipe)
-	Pipe _out (1);
-	Function func;
-	char *str_sum = "(ps_supplycost)";
-	get_cnf (str_sum, &join_sch, func);
-	func.Print ();
-	OrderMaker grp_order (&join_sch);
-	G.Use_n_Pages (1);
+    GroupBy G;
+    // _s (input pipe)
+    //Pipe _out (1);
+    Pipe _out (100);
+    Function func;
+    char *str_sum = "(ps_supplycost)";
+    get_cnf (str_sum, &join_sch, func);
+    func.Print ();
+    //OrderMaker grp_order (&join_sch);
+    OrderMaker grp_order;
+    grp_order.numAtts = 1;
+    grp_order.whichAtts[0] = 3;
+    grp_order.whichTypes[0] = Int;
+    G.Use_n_Pages (1);
 
-	SF_ps.Run (dbf_ps, _ps, cnf_ps, lit_ps); // 161 recs qualified
-	J.Run (_s, _ps, _s_ps, cnf_p_ps, lit_p_ps);
-	G.Run (_s_ps, _out, grp_order, func);
+    SF_ps.Run (dbf_ps, _ps, cnf_ps, lit_ps); // 161 recs qualified
+    J.Run (_s, _ps, _s_ps, cnf_p_ps, lit_p_ps);
+    G.Run (_s_ps, _out, grp_order, func);
 
-	SF_ps.WaitUntilDone ();
-	J.WaitUntilDone ();
-	G.WaitUntilDone ();
+    SF_ps.WaitUntilDone ();
+    J.WaitUntilDone ();
+    G.WaitUntilDone ();
 
-	Schema sum_sch ("sum_sch", 1, &DA);
-	int cnt = clear_pipe (_out, &sum_sch, true);
-	cout << " query6 returned sum for " << cnt << " groups (expected 25 groups)\n"; 
+
+    Schema sum_sch ("sum_sch", 1, &DA);
+    int cnt = clear_pipe (_out, &sum_sch, true);
+/*
+    //TODO:: uncomment this later as this is the correct output : has 2 attributes
+    Attribute sumGroupByAttrs[] = {DA, IA};
+    Schema sumGroupBySchema("sumGroupBy", 2, sumGroupByAttrs);
+    int cnt = clear_pipe(_out, &sumGroupBySchema, true);
+*/
+    cout << " query6 returned sum for " << cnt << " groups (expected 25 groups)\n"; 
 }
 
 void q7 () { 
